@@ -522,17 +522,16 @@ def parse_xmp(inp: BinaryIO) -> List[model.XmpStructure]:
     # parse the XMP packet header to figure out what encoding to use
     header = inp.read(128)
     header_match = XMP_HEADER_PATTERN.match(header)
-    if not header_match:
-        # assume the payload is UTF-8 and start decoding immediately
-        # at the start
-        encoding = 'utf-8'
-        start_offset = 0
-    else:
+    if header_match:
         bom = header_match.group(1)
         encoding = BOM_REGISTRY.get(bom, 'utf-8')
         start_offset = len(header_match.group(0))
-    inp.seek(start_offset)
-    inp_str = inp.read().decode(encoding)
+
+        inp.seek(start_offset)
+        inp_str = inp.read().decode(encoding)
+    else:
+        inp.seek(0)
+        inp_str = inp.read()
 
     # TODO this would be a lot cleaner with code gen, but that feels like
     #  overkill for a minor feature. Reevaluate later
